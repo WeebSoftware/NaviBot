@@ -1,23 +1,24 @@
 import disnake
 import os
+from disnake.ext import commands
 
 DISCORD_TOKEN=os.getenv('DISCORD_TOKEN')
 
 intents = disnake.Intents.default()
 intents.message_content = True
 
-client = disnake.Client(intents=intents)
+bot = commands.InteractionBot(intents=intents)
 
-@client.event
+@bot.event
 async def on_ready():
-    print(f'We have logged in as {client.user}')
+    print(f'We have logged in as {bot.user}')
 
-@client.event
+@bot.event
 async def on_message(message):
-    if message.author == client.user:
+    if message.author == bot.user:
         return
 
     if message.content.startswith('$hello'):
         await message.channel.send('Hello World!')
 
-client.run(DISCORD_TOKEN)
+bot.run(DISCORD_TOKEN)
