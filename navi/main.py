@@ -2,6 +2,11 @@ import config
 import disnake
 import os
 from disnake.ext import commands
+from openai import OpenAI
+
+# OPENAI
+openai_client = OpenAI()
+openai_chat_history = []
 
 # API TOKENS
 DISCORD_TOKEN = os.getenv("DISCORD_TOKEN")
@@ -72,7 +77,20 @@ async def on_raw_reaction_remove(payload):
 
 @bot.slash_command(description="Chat with Navi!")
 async def chat(inter, message):
-    await inter.response.send_message(content=message)
+    openai_chat_history.append({"role": "user", "content": message})
+    while len(openai_chat_history) > 5:
+        openai_chat_history.pop(1)
+
+    completion = openai_client.chat.completions.create(
+        model="gpt-3.5-turbo",
+        messages=[{"role": "system", "content": config.NAVI_CHAT_PROMPT}]
+        + openai_chat_history,
+    )
+
+    navi_response = completion.choices[0].message.content
+    openai_chat_history.append({"role": "assistant", "content": navi_response})
+
+    await inter.response.send_message(content=navi_response)
 
 
 @bot.slash_command(description="If you know, you know.")
