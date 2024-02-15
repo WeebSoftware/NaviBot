@@ -14,7 +14,7 @@ rate = Rate(30, Duration.HOUR)
 chat_user_rate_limits = {}
 
 # API TOKENS
-DISCORD_TOKEN = os.getenv("TEST_DISCORD_TOKEN")
+DISCORD_TOKEN = os.getenv("DISCORD_TOKEN")
 
 # INTENTS
 intents = disnake.Intents.default()
