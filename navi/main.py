@@ -3,13 +3,18 @@ import disnake
 import os
 from disnake.ext import commands
 from openai import OpenAI
+from pyrate_limiter import Duration, Rate, BucketFullException
+from pyrate_limiter.limiter import Limiter
 
 # OPENAI
 openai_client = OpenAI()
 openai_chat_history = []
 
+rate = Rate(30, Duration.HOUR)
+chat_user_rate_limits = {}
+
 # API TOKENS
-DISCORD_TOKEN = os.getenv("DISCORD_TOKEN")
+DISCORD_TOKEN = os.getenv("TEST_DISCORD_TOKEN")
 
 # INTENTS
 intents = disnake.Intents.default()
@@ -75,8 +80,23 @@ async def on_raw_reaction_remove(payload):
             await member.remove_roles(role)
 
 
+def limited():
+    print("limited boi")
+
+
 @bot.slash_command(description="Chat with Navi!")
 async def chat(inter, message):
+    if inter.author.id not in chat_user_rate_limits:
+        chat_user_rate_limits[inter.author.id] = Limiter(rate)
+
+    # check if user is currently rate limited
+    try:
+        chat_user_rate_limits[inter.author.id].try_acquire(message)
+    except BucketFullException:
+        rate_limited_response = "Handling Exception... I'm sorry you have exceed the limit of 30 chat requests per hour to me, Navi... Please try again later..."
+        await inter.response.send_message(content=rate_limited_response)
+        return
+
     openai_chat_history.append({"role": "user", "content": message})
     while len(openai_chat_history) > 5:
         openai_chat_history.pop(1)
