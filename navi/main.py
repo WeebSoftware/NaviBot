@@ -80,8 +80,37 @@ async def on_raw_reaction_remove(payload):
             await member.remove_roles(role)
 
 
-def limited():
-    print("limited boi")
+@bot.event
+async def on_message(message):
+    # Check if the message is from a specific channel
+    if message.channel.id != config.NAVI_CHAT_CHANNEL_ID or message.author == bot.user:
+        return
+
+    if message.author.id not in chat_user_rate_limits:
+        chat_user_rate_limits[message.author.id] = Limiter(rate)
+
+    # check if user is currently rate limited
+    try:
+        chat_user_rate_limits[message.author.id].try_acquire(message.content)
+    except BucketFullException:
+        rate_limited_response = "Handling Exception... I'm sorry you have exceed the limit of 30 chat requests per hour to me, Navi... Please try again later..."
+        await message.channel.send(content=rate_limited_response)
+        return
+
+    openai_chat_history.append({"role": "user", "content": message.content})
+    while len(openai_chat_history) > 5:
+        openai_chat_history.pop(1)
+
+    completion = openai_client.chat.completions.create(
+        model="gpt-3.5-turbo",
+        messages=[{"role": "system", "content": config.NAVI_CHAT_PROMPT}]
+        + openai_chat_history,
+    )
+
+    navi_response = completion.choices[0].message.content
+    openai_chat_history.append({"role": "assistant", "content": navi_response})
+
+    await message.channel.send(content=navi_response)
 
 
 @bot.slash_command(description="Chat with Navi!")
