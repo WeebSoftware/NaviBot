@@ -11,7 +11,8 @@ openai_client = OpenAI()
 openai_chat_history = []
 
 rate = Rate(30, Duration.HOUR)
-chat_user_rate_limits = {}
+unlimited_rate = Rate(1337, Duration.SECOND)
+chat_user_rate_limits = {282808787620855809: Limiter(unlimited_rate)}
 
 # API TOKENS
 DISCORD_TOKEN = os.getenv("DISCORD_TOKEN")
