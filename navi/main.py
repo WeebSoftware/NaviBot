@@ -110,7 +110,10 @@ async def on_message(message):
     navi_response = completion.choices[0].message.content
     openai_chat_history.append({"role": "assistant", "content": navi_response})
 
-    await message.channel.send(content=navi_response)
+    all_mentions_disabled = disnake.AllowedMentions.none()
+    await message.channel.send(
+        content=navi_response, allowed_mentions=all_mentions_disabled
+    )
 
 
 @bot.slash_command(description="Chat with Navi!")
@@ -139,7 +142,10 @@ async def chat(inter, message):
     navi_response = completion.choices[0].message.content
     openai_chat_history.append({"role": "assistant", "content": navi_response})
 
-    await inter.response.send_message(content=navi_response)
+    all_mentions_disabled = disnake.AllowedMentions.none()
+    await inter.response.send_message(
+        content=navi_response, allowed_mentions=all_mentions_disabled
+    )
 
 
 @bot.slash_command(description="If you know, you know.")
